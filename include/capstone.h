@@ -16,15 +16,15 @@ extern "C" {
 #include "platform.h"
 
 #ifdef _MSC_VER
-    #pragma warning(disable:4201)
-    #pragma warning(disable:4100)
-    #ifdef CAPSTONE_SHARED
-        #define CAPSTONE_EXPORT __declspec(dllexport)
-    #else    // defined(CAPSTONE_STATIC)
-        #define CAPSTONE_EXPORT
-    #endif
+	#pragma warning(disable:4201)
+	#pragma warning(disable:4100)
+	#ifdef CAPSTONE_SHARED
+		#define CAPSTONE_EXPORT __declspec(dllexport)
+	#else    // defined(CAPSTONE_STATIC)
+		#define CAPSTONE_EXPORT
+	#endif
 #else
-    #define CAPSTONE_EXPORT
+	#define CAPSTONE_EXPORT
 #endif
 
 #ifdef __GNUC__
@@ -114,6 +114,9 @@ typedef enum cs_opt_type {
 	CS_OPT_MEM,	// User-defined dynamic memory related functions
 	CS_OPT_SKIPDATA, // Skip data when disassembling. Then engine is in SKIPDATA mode.
 	CS_OPT_SKIPDATA_SETUP, // Setup user-defined function for SKIPDATA option
+	CS_OPT_INSN_CACHE_SIZE, // Set INSN_CACHE_SIZE  
+	CS_OPT_CHECKINSN, // Check instruction when disassembling.
+	CS_OPT_CHECKINSN_SETUP, // Setup user-defined function for CHECKINSN option
 } cs_opt_type;
 
 // Runtime option value (associated with option type above)
@@ -164,6 +167,22 @@ typedef struct cs_opt_skipdata {
 	// User-defined data to be passed to @callback function pointer.
 	void *user_data;
 } cs_opt_skipdata;
+
+// User-defined callback function for CHECKINSN option
+// @insn: the instruction to check.
+// @user_data: user-data passed to cs_option() via @user_data field in
+//      cs_opt_checkinsn struct below.
+// @return: return true to continue, or false to immediately stop disassembling.
+typedef bool(*cs_checkinsn_cb_t)(const uint8_t *code, size_t code_size, size_t offset, struct cs_insn *insn, void* user_data);
+
+// User-customized setup for CHECKINSN option
+typedef struct cs_opt_checkinsn
+{
+	cs_checkinsn_cb_t callback; 	// default value is NULL
+
+	// User-defined data to be passed to @callback function pointer.
+	void *user_data;
+} cs_opt_checkinsn;
 
 
 #include "arm.h"
@@ -267,8 +286,8 @@ typedef enum cs_err {
  @minor: minor number of API version
 
  @return hexical number as (major << 8 | minor), which encodes both
-     major & minor versions.
-     NOTE: This returned value can be compared with version number made
+	 major & minor versions.
+	 NOTE: This returned value can be compared with version number made
 	 with macro CS_MAKE_VERSION
 
  For example, second API version would return 1 in @major, and 1 in @minor
@@ -362,13 +381,13 @@ cs_err cs_errno(csh handle);
  @code: error code (see CS_ERR_* above)
 
  @return: returns a pointer to a string that describes the error code
-    passed in the argument @code
+	passed in the argument @code
 */
 CAPSTONE_EXPORT
 const char *cs_strerror(cs_err code);
 
 /*
- Dynamicly allocate memory to contain disasm insn
+ Dynamically allocate memory to contain disasm insn
  Disassembled instructions will be put into @*insn
 
  NOTE 1: this API will automatically determine memory needed to contain
@@ -380,10 +399,10 @@ const char *cs_strerror(cs_err code);
  @code_size: size of above code
  @address: address of the first insn in given raw code buffer
  @insn: array of insn filled in by this function
-       NOTE: @insn will be allocated by this function, and should be freed
+	   NOTE: @insn will be allocated by this function, and should be freed
 	   with cs_free() API.
- @count: number of instrutions to be disassembled, or 0 to get all of them
- @return: the number of succesfully disassembled instructions,
+ @count: number of instructions to be disassembled, or 0 to get all of them
+ @return: the number of successfully disassembled instructions,
  or 0 if this function failed to disassemble the given code
 
  On failure, call cs_errno() for error code.
@@ -405,6 +424,28 @@ size_t cs_disasm_ex(csh handle,
 		const uint8_t *code, size_t code_size,
 		uint64_t address,
 		size_t count,
+		cs_insn **insn);
+
+/*
+Disassembled instructions will be put into @*insn
+
+@handle: handle returned by cs_open()
+@code: buffer containing raw binary code to be disassembled
+@code_size: size of above code
+@address: address of the insn in given raw code buffer
+@insn: array of insn filled in by this function
+NOTE: @insn will be allocated by this function if null, and should be freed
+with cs_free() API.
+@return: false if this function failed otherwise true
+
+insn->id == 0 means invalid instruction
+
+On failure, call cs_errno() for error code if handle is valid.
+*/
+CAPSTONE_EXPORT
+bool cs_disasm_single(csh handle,
+		const uint8_t *code, size_t code_size,
+		uint64_t address,
 		cs_insn **insn);
 
 /*
