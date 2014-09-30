@@ -138,7 +138,7 @@ typedef enum cs_opt_value {
 // @user_data: user-data passed to cs_option() via @user_data field in
 //      cs_opt_skipdata struct below.
 // @return: return number of bytes to skip, or 0 to immediately stop disassembling.
-typedef size_t (*cs_skipdata_cb_t)(const uint8_t *code, size_t code_size, size_t offset, void* user_data);
+typedef size_t (*cs_skipdata_cb_t)(const uint8_t *code, size_t code_size, size_t offset, void *user_data);
 
 // User-customized setup for SKIPDATA option
 typedef struct cs_opt_skipdata {
@@ -167,22 +167,6 @@ typedef struct cs_opt_skipdata {
 	// User-defined data to be passed to @callback function pointer.
 	void *user_data;
 } cs_opt_skipdata;
-
-// User-defined callback function for CHECKINSN option
-// @insn: the instruction to check.
-// @user_data: user-data passed to cs_option() via @user_data field in
-//      cs_opt_checkinsn struct below.
-// @return: return true to continue, or false to immediately stop disassembling.
-typedef bool(*cs_checkinsn_cb_t)(const uint8_t *code, size_t code_size, size_t offset, struct cs_insn *insn, void* user_data);
-
-// User-customized setup for CHECKINSN option
-typedef struct cs_opt_checkinsn
-{
-	cs_checkinsn_cb_t callback; 	// default value is NULL
-
-	// User-defined data to be passed to @callback function pointer.
-	void *user_data;
-} cs_opt_checkinsn;
 
 
 #include "arm.h"
@@ -252,6 +236,22 @@ typedef struct cs_insn {
 	//   the current instruction is not the "data" instruction (which clearly has no detail).
 	cs_detail *detail;
 } cs_insn;
+
+
+// User-defined callback function for CHECKINSN option
+// @insn: the instruction to check.
+// @user_data: user-data passed to cs_option() via @user_data field in
+//      cs_opt_checkinsn struct below.
+// @return: return true to continue, or false to immediately stop disassembling.
+typedef bool(*cs_checkinsn_cb_t)(const uint8_t *code, size_t code_size, size_t offset, cs_insn *insn, void *user_data);
+
+// User-customized setup for CHECKINSN option
+typedef struct cs_opt_checkinsn {
+	cs_checkinsn_cb_t callback; 	// default value is NULL
+
+	// User-defined data to be passed to @callback function pointer.
+	void *user_data;
+} cs_opt_checkinsn;
 
 
 // Calculate the offset of a disassembled instruction in its buffer, given its position

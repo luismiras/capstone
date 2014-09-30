@@ -625,10 +625,9 @@ bool cs_disasm_single(csh ud, const uint8_t *buffer, size_t size, uint64_t offse
 	struct cs_struct *handle = (struct cs_struct *)(uintptr_t)ud;
 	MCInst mci;
 	uint16_t insn_size;
-	size_t c = 0, i;
 	cs_insn *insn_cache;
 	bool r;
-	void *tmp;
+
 	if (!handle) {
 		// FIXME: how to handle this case:
 		// handle->errnum = CS_ERR_HANDLE;
