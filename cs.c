@@ -680,12 +680,12 @@ bool cs_disasm_single(csh ud, const uint8_t *buffer, size_t size, uint64_t offse
 
 		r = handle->disasm(ud, buffer, size, &mci, &insn_size, offset, handle->getinsn_info);
 		if (r) {
-			SStream ss;
-			SStream_Init(&ss);
+			//SStream ss;
+			//SStream_Init(&ss);
 
 			mci.flat_insn->size = insn_size;
-			handle->printer(&mci, &ss, handle->printer_info);
-			fill_insn(handle, insn_cache, ss.buffer, &mci, handle->post_printer, buffer);
+			//handle->printer(&mci, &ss, handle->printer_info);
+			//fill_insn(handle, insn_cache, ss.buffer, &mci, handle->post_printer, buffer);
 		} else {
 			insn_cache->id = 0;	// invalid ID for this "data" instruction
 		}
